@@ -1,0 +1,67 @@
+---
+title: "Developing Data Products - Assignment Week 3"
+author: "Simon Rodriguez"
+date: "October 24, 2017"
+output: ioslides_presentation
+---
+
+```{r setup, echo = F, message=F, warning=F, include=FALSE}
+```
+
+## Geolocation and height of peaks higher than 1500m around the world
+
+In the next slide we will see a plot of most of the highest peaks in the world. Some locations can be easily recognised even though there is not a map under the locations of the peaks, such as South America due to the Andes and Nepal with the Himalayas. 
+
+Hovering each peak will display its name and height. Also, the color coding gives a quick idea of the height range of said peak (green is for the small cases, red is for the highest ones).
+
+If you want to download the database I used, go to:
+ http://viewfinderpanoramas.org/prominence.html
+
+## Geolocation and height of peaks higher than 1500m around the world
+
+```{r processing, echo = F, message=F, warning=F}
+setwd("/home/simon/Desktop/")
+
+# Locations and names of mountains all around the world higher than 1500m
+places <- read.csv("1500.csv", header = T)
+places$Lat_dec = as.numeric(as.character(places$Lat_dec))
+places$Long_dec = as.numeric(as.character(places$Long_dec))
+places["Class"] <- c()
+attach(places)
+
+# Create the color codes
+places$Class[(Elevation >= 8000)] <- ">8000m"
+places$Class[(Elevation >= 7000) & (Elevation < 8000)] <- ">7000m"
+places$Class[(Elevation >= 6000) & (Elevation < 7000)] <- ">6000m"
+places$Class[(Elevation >= 5000) & (Elevation < 6000)] <- ">5000m"
+places$Class[(Elevation >= 4000) & (Elevation < 5000)] <- ">4000m"
+places$Class[(Elevation >= 3000) & (Elevation < 4000)] <- ">3000m"
+places$Class[(Elevation >= 2000) & (Elevation < 3000)] <- ">2000m"
+places$Class[Elevation < 2000] <- ">1500m"
+
+# Name + height column
+places$info = paste(places$Name, "-", paste0(places$Elevation,"m"))
+
+# Create the new (clean) dataframe
+newPlaces <- data.frame(lat = places$Lat_dec, lng = places$Long_dec, class = places$Class, info = places$info, height = places$Elevation)
+
+```
+
+```{r plot, echo = F, warning=F, message=F}
+library(plotly)
+
+g <- list(
+  scope = 'world',
+  showland = TRUE,
+  landcolor = toRGB("gray95"),
+  subunitcolor = toRGB("gray85"),
+  countrycolor = toRGB("gray85")
+)
+
+p <- plot_ly(newPlaces, x = ~lng, y = ~lat) %>%
+    add_markers(text = ~info, color = ~class, symbol = I("triangle-up"), size = I(8), hoverinfo = "text",   colors=c("green","red"), size=20 , opacity=0.5) 
+p
+```
+
+## Thanks!
+
